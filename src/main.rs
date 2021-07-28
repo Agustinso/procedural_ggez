@@ -5,7 +5,6 @@ use ggez::{Context, event::{EventHandler, KeyMods}, graphics::{Color, Image, set
 const MAP_SIZE:i32 = 500;
 
 struct Map {
-    //img: Image,
     data: Vec<u8>,
     octaves:u8,
     freq:f32,
@@ -33,17 +32,17 @@ impl Map {
                     .with_octaves(self.octaves)
                     .with_gain(self.gain)
                     .with_lacunarity(self.lacunarity)
-                    .generate_scaled(0.0, 255.0);
+                    .generate_scaled(0.0, 1.0);
 
         let mut bytes: Vec<u8> = Vec::with_capacity((MAP_SIZE*MAP_SIZE*4) as usize);
         for _ in 0..MAP_SIZE*MAP_SIZE*4 {
             bytes.push(0);
         }
 
-        let deepo_level:u8 = 50;
-        let ocean_level:u8 = 70;
-        let water_level:u8 = 100;
-        let beach_level:u8 = 120;
+        let deepo_level:u8 = 50-45;
+        let ocean_level:u8 = 70-45;
+        let water_level:u8 = 100-45;
+        let beach_level:u8 = 120-45;
         let pltau_level:u8 = 140;
         let mount_level:u8 = 170;
         let peaky_level:u8 = 210;
@@ -61,7 +60,11 @@ impl Map {
         let mut i = 0;
         for x in 0..MAP_SIZE {
             for y in 0..MAP_SIZE {
-                let height:u8 = noise[(x*MAP_SIZE+y) as usize].clone() as u8;
+                let height:u8 = (noise[(x*MAP_SIZE+y) as usize].clone().powf(4.0)*255.0) as u8;
+                let mut next = height;
+                if x>0 {
+                    next = (noise[((x-1)*MAP_SIZE+y) as usize].clone().powf(4.0)*255.0) as u8;
+                }
                 let mut color = (104u8,154u8,25u8);
 
                 if height>=deepo_level {
@@ -97,7 +100,8 @@ impl Map {
                     color = deepo_color;
                 }
 
-                if x>0 && height>=water_level && height < (noise[((x-1)*MAP_SIZE+y) as usize].clone() as u8) {
+
+                if x>0 && height>=water_level && height < next {
                     color.0 = (0.7*(color.0 as f32)) as u8;
                     color.1 = (0.7*(color.1 as f32)) as u8;
                     color.2 = (0.7*(color.2 as f32)) as u8;
